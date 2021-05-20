@@ -1,0 +1,55 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend
+  labels:
+    app: backend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: backend
+  template:
+    metadata:
+      labels:
+        app: backend
+    spec:
+      # initContainers:
+      # - name: check-db-ready
+      #   image: postgres:9.6.5
+      #   command: ['sh', '-c', 'until pg_isready -h postgres -U ali -d signupdb -p 5432 -t 5 ; do echo waiting for database; sleep 5; done;']
+      containers:
+      - args:
+        - sh
+        - ./docker-entrypoint.sh
+        env:
+        - name: POSTGRES_HOST
+          value: postgres-service
+        - name: POSTGRES_DATABASE
+          value: signupdb
+        - name: POSTGRES_USERNAME
+          value: ali
+        - name: POSTGRES_PASSWORD
+          value: ali12345
+        #- name: DATABASE_URL
+        #  value: postgres
+        image: aliakbarasiff/signup-app:backend
+        name: backend
+        ports:
+        - containerPort: 4000
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: backend-service
+  labels:
+    app: backend
+spec:
+  ports:
+  - protocol: TCP
+    port: 4000
+    targetPort: 4000
+    nodePort: 30001
+  selector:
+    app: backend
+  type: LoadBalancer
